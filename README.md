@@ -1,2 +1,2 @@
 # SUML
-Projekt SUML -model przewidujący opóźnienie lotu
+Projekt SUML - model przewidujący opóźnienie lotu
