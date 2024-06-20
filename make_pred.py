@@ -1,17 +1,16 @@
 import joblib
 import numpy as np
-import keras
+from tensorflow import keras
 
 reconstructed_model = keras.models.load_model(
-    "/Users/alankwiecien/Documents/Studia/PJATK_Informatyka/Semestr VIII/SUML/Projekt/SUML/utils/test_prediction_model.keras")
+    "./utils/test_prediction_model.keras")
 scaler_loaded = joblib.load(
-    '/Users/alankwiecien/Documents/Studia/PJATK_Informatyka/Semestr VIII/SUML/Projekt/SUML/utils/scaler.pkl')
+    './utils/scaler.pkl')
 
 
-def predict(dataset):
-    my_dataset = np.array(dataset).astype(np.int16)
-    my_dataset = my_dataset.reshape(1, -1)
-    my_dataset = scaler_loaded.transform(my_dataset)
-    prediction = reconstructed_model.predict(my_dataset)
+def predict(input_dataset):
+    dataset = np.array(input_dataset).astype(np.int16)
+    dataset = dataset.reshape(1, -1)
+    dataset = scaler_loaded.transform(dataset)
+    prediction = reconstructed_model.predict(dataset)
     return prediction.item()
-

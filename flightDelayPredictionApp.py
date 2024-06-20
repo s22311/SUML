@@ -3,7 +3,7 @@ import make_pred
 from datetime import datetime
 
 dep_time_blk_mapping = {
-    '00:01-05:59': 0, '06:00-06:59': 1, '07:00-07:59': 2, '08:00-08:59': 3, '09:00-09:59': 4, '10:00-10:59': 5,
+    '00:00-05:59': 0, '06:00-06:59': 1, '07:00-07:59': 2, '08:00-08:59': 3, '09:00-09:59': 4, '10:00-10:59': 5,
     '11:00-11:59': 6, '12:00-12:59': 7,
     '13:00-13:59': 8, '14:00-14:59': 9, '15:00-15:59': 10, '16:00-16:59': 11, '17:00-17:59': 12, '18:00-18:59': 13,
     '19:00-19:59': 14,
@@ -60,41 +60,94 @@ departing_airport_mapping = {
     'Tulsa International': 92, 'Washington Dulles International': 93, 'Will Rogers World': 94, 'William P Hobby': 95
 }
 
-st.title("Czy twój lot opóźni się conajmniej 15 min?")
 
-date = st.date_input("Select a date", datetime.today())
-month = date.month
-day_of_week = date.weekday()
+def main():
+    if 'date' not in st.session_state:
+        st.session_state['date'] = datetime.today()
+    if 'dep_time_blk' not in st.session_state:
+        st.session_state['dep_time_blk'] = list(dep_time_blk_mapping.keys())[0]
+    if 'carrier_name' not in st.session_state:
+        st.session_state['carrier_name'] = list(carrier_name_mapping.keys())[0]
+    if 'departing_airport' not in st.session_state:
+        st.session_state['departing_airport'] = list(departing_airport_mapping.keys())[0]
+    if 'short_flight' not in st.session_state:
+        st.session_state['short_flight'] = False
+    if 'snowing' not in st.session_state:
+        st.session_state['snowing'] = False
+    if 'raining' not in st.session_state:
+        st.session_state['raining'] = False
 
-dep_time_blk = st.selectbox("Select Departure Time Block", list(dep_time_blk_mapping.keys()))
-dep_time_blk_value = dep_time_blk_mapping[dep_time_blk]
+    st.title("Will your flight be delayed at least 15 min?")
 
-# Dropdown for CARRIER_NAME
-carrier_name = st.selectbox("Select Carrier Name", list(carrier_name_mapping.keys()))
-carrier_name_value = carrier_name_mapping[carrier_name]
+    date = st.date_input("Select a date", key='date')
+    month = date.month
+    day_of_week = date.weekday()
 
-# Dropdown for DEPARTING_AIRPORT
-departing_airport = st.selectbox("Select Departing Airport", list(departing_airport_mapping.keys()))
-departing_airport_value = departing_airport_mapping[departing_airport]
+    dep_time_blk = st.selectbox("Select departure time block", list(dep_time_blk_mapping.keys()), key='dep_time_blk')
+    dep_time_blk_value = dep_time_blk_mapping[dep_time_blk]
 
-short_flight = st.checkbox("Is this a short flight?")
-# over 720 miles
+    carrier_name = st.selectbox("Select carrier's name", list(carrier_name_mapping.keys()), key='carrier_name')
+    carrier_name_value = carrier_name_mapping[carrier_name]
 
-snow = st.checkbox("Is it snowing?")
+    departing_airport = st.selectbox("Select departing airport", list(departing_airport_mapping.keys()), key='departing_airport')
+    departing_airport_value = departing_airport_mapping[departing_airport]
 
-rain = st.checkbox("Is it raining?")
+    is_short_flight = st.checkbox("Is this a short flight? (under 720 miles)", key='short_flight')
 
-input_data = [
-    month,
-    day_of_week,
-    dep_time_blk_value,
-    carrier_name_value,
-    departing_airport_value,
-    short_flight,
-    snow,
-    rain
-]
+    is_snowing = st.checkbox("Is it snowing?", key='snowing')
 
-if st.button("Make Prediction"):
-    prediction = make_pred.predict(input_data)
-    st.write(f"The prediction is: {prediction}")
+    is_raining = st.checkbox("Is it raining?", key='raining')
+
+    input_data = [
+        month,
+        day_of_week,
+        dep_time_blk_value,
+        carrier_name_value,
+        departing_airport_value,
+        is_short_flight,
+        is_snowing,
+        is_raining
+    ]
+
+    result_message = ''
+
+    col1, col2 = st.columns(2)
+
+    st.markdown("""
+        <style>
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    with col1:
+        if st.button("Check the flight"):
+            prediction = make_pred.predict(input_data)
+            if prediction > 0.5:
+                result_message = "Unfortunately your flight will be delayed at least 15 min."
+            else:
+                result_message = "Yeeey! It seems that your flight won't be delayed"
+
+    with col2:
+        if st.button("Reset"):
+            st.session_state.clear()
+            st.experimental_rerun()
+
+    st.markdown("""
+        <style>
+        div.stButton > button:first-child {
+            margin: 0 auto;
+            display: block;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    st.markdown(f'<div style="text-align: center; font-size: 24px; margin-top: 20px;"> {result_message}</div>',
+                unsafe_allow_html=True)
+
+
+if __name__ == "__main__":
+    main()
